@@ -32,6 +32,12 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="Kinematics.cpp" />
+		<Unit filename="Kinematics.h" />
+		<Unit filename="Mat3.h" />
+		<Unit filename="Transform.cpp" />
+		<Unit filename="Transform.h" />
+		<Unit filename="Vec3.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />

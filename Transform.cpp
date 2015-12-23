@@ -5,6 +5,14 @@ Transform::Transform() {
   clear();
 }
 
+double* Transform::getTranslation(){
+  double* tr = new double[3];
+  tr[0] = t[0][3];
+  tr[1] = t[1][3];
+  tr[2] = t[2][3];
+  return tr;
+}
+
 void Transform::clear() {
   // Initialize to identity matrix:
   for (int i = 0; i < 4; i++)

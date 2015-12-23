@@ -8,7 +8,7 @@ class Transform {
 public:
   Transform();
   virtual ~Transform() {}
-
+  double* getTranslation();
   void clear();
   Transform &translate(double x, double y, double z);
   Transform &translateOrigin(double x, double y, double z);

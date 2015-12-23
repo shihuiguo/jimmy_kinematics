@@ -11,12 +11,12 @@ int main()
     for (int ind=0; ind<3; ind++)
     {
         cin >> q[ind];
-        angle[ind] = (q[ind]-512)/1023.0*300.0;
+        angle[ind] = (q[ind]-512)/1023.0*300.0/180*PI;
     }
 
 
-    Transform t = kinematics_forward_rarm(angle);
-    //Transform t = kinematics_forward_larm(angle);
+    //Transform t = kinematics_forward_rarm(angle);
+    Transform t = kinematics_forward_larm(angle);
     t.print();
     return 0;
 }
