@@ -15,8 +15,8 @@ int main()
     }
 
 
-    //Transform t = kinematics_forward_rarm(angle);
-    Transform t = kinematics_forward_larm(angle);
+    Transform t = kinematics_forward_rarm(angle);
+    //Transform t = kinematics_forward_larm(angle);
     t.print();
     return 0;
 }

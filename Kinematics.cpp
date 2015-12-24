@@ -14,34 +14,16 @@ kinematics_forward_head(const double *q)
 Transform
 kinematics_forward_larm(const double *q)
 {
-/*
-  Transform t, t_s, t_su, t_u, t_ue, t_e, t_h;
-  t_s.rotateY(q[0]);
-  t_su.rotateX(-PI*0.250).rotateZ(PI*0.5);
-  t_u.rotateY(q[1]).translateOrigin(d_su, 0, 0);
-  t_ue.rotateZ(-PI*0.250).rotateX(-PI*0.5);
-  t_e.rotateY(q[2]).translateOrigin(d_ue/SQRT2, 0, d_ue/SQRT2);
-  t_h.translateOrigin(d_eh, 0, 0);
-  t = t_s*t_su*t_u*t_ue*t_e*t_h;
-  */
-  Transform t, t_s, t_u, t_e, t_h;
-  t_s.rotateX(q[0]);
-  t_u.rotateZ(-q[1]-PI*0.250).translateOrigin(d_su_x, -d_su_y, d_su_z);
-  t_e.rotateY(-q[2]-PI*0.250).translateOrigin(d_ue_x, d_ue_y, d_ue_z);
-  t_h.translateOrigin(d_eh, 0, 0);
-  t = t_s*t_u*t_e*t_h;
+  Transform t;
+  t.mDH(-PI/2, d_su_y, q[0], d_su_x).mDH(-PI/2, d_ue_x, -PI/4+q[1], -d_ue_z).mDH(0, d_eh, PI/4+q[2], 0);
   return t;
 }
 
 Transform
 kinematics_forward_rarm(const double *q)
 {
-  Transform t, t_s, t_u, t_e, t_h;
-  t_s.rotateX(-q[0]);
-  t_u.rotateZ(-q[1]+PI*0.250).translateOrigin(d_su_x, -d_su_y, d_su_z);
-  t_e.rotateY(-q[2]-PI*0.750).translateOrigin(d_ue_x, d_ue_y, d_ue_z);
-  t_h.translateOrigin(d_eh, 0, 0);
-  t = t_s*t_u*t_e*t_h;
+  Transform t;
+  t.mDH(PI/2, d_su_y, q[0], d_su_x).mDH(PI/2, d_ue_x, PI/4+q[1], -d_ue_z).mDH(0, d_eh, -PI/4+q[2], 0);
   return t;
 }
 

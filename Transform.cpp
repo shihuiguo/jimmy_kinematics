@@ -108,7 +108,7 @@ Transform& Transform::mDH(double alpha, double a, double theta, double d) {
   t1(2,0) = st*sa; t1(2,1) = ct*sa; t1(2,2) = ca; t1(2,3) = ca*d;
   */
 
-  this->translateX(a).rotateX(alpha).translateZ(d).rotateZ(theta);
+  this->translateZ(d).rotateZ(theta).translateX(a).rotateX(alpha);
   return *this;
 }
 

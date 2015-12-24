@@ -21,8 +21,8 @@ const double d_ue = 0.065;
 const double d_ue_x = 0.063;
 const double d_ue_y = 0.0;
 const double d_ue_z = 0.015;
-const double d_eh = 0.078;
-const double d_eh_x = 0.078;
+const double d_eh = 0.083;
+const double d_eh_x = 0.083;
 const double d_eh_y = 0.0;
 const double d_eh_z = 0.0;
 
