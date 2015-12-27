@@ -8,6 +8,7 @@
 
 
 enum {LEG_LEFT = 0, LEG_RIGHT = 1};
+enum {ARM_LEFT = 0, ARM_RIGHT = 1};
 
 //const double PI = 3.14159265358979323846;
 const double PI = 2*asin(1);
@@ -32,6 +33,8 @@ Transform kinematics_forward_rarm(const double *q);
 Transform kinematics_forward_lleg(const double *q);
 Transform kinematics_forward_rleg(const double *q);
 
+void test_kinematics_forward_larm(const double *q);
+
 std::vector<double>
 kinematics_inverse_leg(
 			   const Transform trLeg,
@@ -51,8 +54,15 @@ kinematics_inverse_legs(
 			    const double *pTorso,
 			    int legSupport=0);
 
-std::vector<double> kinematics_inverse_arm(
-			    const double *dArm
+Vec3 get_current_position(int leg, const double * q);
+
+double* kinematics_inverse_arm(
+          const int arm,
+			    const Vec3 dArm,
+			    const double* qArm_now
 			    );
+
+double servo_to_radian(int servo);
+int radian_to_servo(double radian);
 
 #endif

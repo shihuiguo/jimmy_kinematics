@@ -3,6 +3,7 @@
 
 #include<cmath>
 #include<algorithm>
+#include <iostream>
 
 
 class Vec3 {
@@ -23,10 +24,10 @@ public:
 
 	Vec3 operator-(){ return Vec3( -x, -y, -z ); }
 
-	Vec3 operator+( Vec3 in ){ return Vec3(x+in.x, y+in.y, z+in.z ); }
-	Vec3 operator-( Vec3 in ){ return Vec3(x-in.x, y-in.y, z-in.z ); }
-	Vec3 operator*( double in ){ return Vec3(x*in, y*in, z*in ); }
-	Vec3 operator/( double in ){ return Vec3(x/in, y/in, z/in ); }
+	Vec3 operator+( const Vec3 in ) const{ return Vec3(x+in.x, y+in.y, z+in.z ); }
+	Vec3 operator-( const Vec3 in ) const{ return Vec3(x-in.x, y-in.y, z-in.z ); }
+	Vec3 operator*( const double in ){ return Vec3(x*in, y*in, z*in ); }
+	Vec3 operator/( const double in ){ return Vec3(x/in, y/in, z/in ); }
 
 	Vec3 operator+=( Vec3 in ){ x+=in.x; y+=in.y; z+=in.z; return *this; }
 	Vec3 operator-=( Vec3 in ){ x-=in.x; y-=in.y; z-=in.z; return *this; }
@@ -43,7 +44,7 @@ public:
 	Vec3 Min( Vec3 in ){ return Vec3( std::min(x,in.x), std::min(y,in.y), std::min(z,in.z) ); }
 	Vec3 Max( Vec3 in ){ return Vec3( std::max(x,in.x), std::max(y,in.y), std::max(z,in.z) ); }
 
-	
+
 };
 
 #endif
