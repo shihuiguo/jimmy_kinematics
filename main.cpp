@@ -13,7 +13,7 @@ int main()
         cin >> q[ind];
         angle[ind] = servo_to_radian(q[ind]);
     }
-    Transform t = kinematics_forward_larm(angle);
+    Transform t = kinematics_forward_rarm(angle);
     t.print();
 
     cout << "Input the target position!" << endl;
@@ -23,12 +23,12 @@ int main()
       cin >> targetPos[ind];
     }
 
-    double* targetAngle = kinematics_inverse_arm(ARM_LEFT, targetPos, angle);
+    double* targetAngle = kinematics_inverse_arm(ARM_RIGHT, targetPos, angle);
     for (int ind=0; ind<3; ind++)
     {
       cout << radian_to_servo(targetAngle[ind]) << endl;
     }
-    t = kinematics_forward_larm(targetAngle);
+    t = kinematics_forward_rarm(targetAngle);
     t.print();
 
     /*
