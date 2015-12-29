@@ -1,20 +1,19 @@
 #include "Kinematics.h"
-#include "Transform.h"
 #include <stdio.h>
 #include <iostream>
 
 
 
 
-Transform kinematics_forward_head(const double *q)
+MTransform kinematics_forward_head(const double *q)
 {
-    Transform t;
+    MTransform t;
     return t;
 }
 
-Transform kinematics_forward(const int limbID, const double *q)
+MTransform kinematics_forward(const int limbID, const double *q)
 {
-    Transform t;
+    MTransform t;
     switch(limbID)
     {
     case ARM_LEFT:
@@ -35,16 +34,16 @@ Transform kinematics_forward(const int limbID, const double *q)
     return t;
 }
 
-Transform kinematics_forward_larm(const double *q)
+MTransform kinematics_forward_larm(const double *q)
 {
-    Transform t;
+    MTransform t;
     t.mDH(-PI/2, d_su_y, q[0], d_su_x).mDH(-PI/2, d_ue_x, -PI/4+q[1], -d_ue_z).mDH(0, d_eh, PI/4+q[2], 0);
     return t;
 }
 
-Transform kinematics_forward_rarm(const double *q)
+MTransform kinematics_forward_rarm(const double *q)
 {
-    Transform t;
+    MTransform t;
     t.mDH(PI/2, d_su_y, q[0], d_su_x).mDH(PI/2, d_ue_x, PI/4+q[1], -d_ue_z).mDH(0, d_eh, -PI/4+q[2], 0);
     return t;
 }
@@ -107,9 +106,9 @@ void kinematics_forward_rarm_exp(const double *q)
 
 
 
-Transform kinematics_forward_lleg(const double *q)
+MTransform kinematics_forward_lleg(const double *q)
 {
-    Transform t;
+    MTransform t;
     t.mDH(PI/2, 0, PI/2+q[0], d_hu)
     .mDH(PI/2, 0, PI/2+q[1], 0)
     .mDH(-PI, d_uk, -delta_upperleg+q[2], 0)
@@ -119,14 +118,24 @@ Transform kinematics_forward_lleg(const double *q)
     return t;
 }
 
-Transform kinematics_forward_rleg(const double *q)
+MTransform kinematics_forward_rleg(const double *q)
 {
-    Transform t;
+    MTransform t;
     return t;
 }
 
 void test_kinematics_forward_arm(int arm)
 {
+    std::cout << "Input three DOFs (0~1023) for current pose!" << std::endl;
+    int *q = new int[numDOF_ARM];
+    double *angle = new double[numDOF_ARM];
+    for (int ind=0; ind<numDOF_ARM; ind++)
+    {
+        std::cin >> q[ind];
+        angle[ind] = servo_to_radian(q[ind]);
+    }
+    MTransform t = kinematics_forward(arm, angle);
+    t.print();
 
 }
 
@@ -140,11 +149,11 @@ void test_kinematics_inverse_arm(int arm)
         std::cin >> q[ind];
         angle[ind] = servo_to_radian(q[ind]);
     }
-    Transform t = kinematics_forward(arm, angle);
+    MTransform t = kinematics_forward(arm, angle);
     t.print();
 
     std::cout << "Input the target position!" << std::endl;
-    Vec3 targetPos;
+    Vector3d targetPos;
     for (int ind=0; ind<numDOF_ARM; ind++)
     {
         std::cin >> targetPos[ind];
@@ -161,7 +170,7 @@ void test_kinematics_inverse_arm(int arm)
 
 void test_kinematics_forward_leg(int leg)
 {
-    Transform t;
+    MTransform t;
 
     std::cout << "Input six DOFs (0~1023) for current pose!" << std::endl;
     int *q = new int[numDOF_LEG];
@@ -178,12 +187,39 @@ void test_kinematics_forward_leg(int leg)
 
 void test_kinematics_inverse_leg(int leg)
 {
+    std::cout << "Input Six DOFs (0~1023) for current pose!" << std::endl;
+    int *q = new int[numDOF_LEG];
+    double *angle = new double[numDOF_LEG];
+    for (int ind=0; ind<numDOF_LEG; ind++)
+    {
+        std::cin >> q[ind];
+        angle[ind] = servo_to_radian(q[ind]);
+    }
+    MTransform t = kinematics_forward(leg, angle);
+    t.print();
+
+    std::cout << "Input the target position!" << std::endl;
+    Vector3d targetPos;
+    for (int ind=0; ind<numDOF_LEG; ind++)
+    {
+        std::cin >> targetPos[ind];
+    }
+
+    double* targetAngle = kinematics_inverse_leg(leg, targetPos, angle);
+    for (int ind=0; ind<numDOF_LEG; ind++)
+    {
+        std::cout << radian_to_servo(targetAngle[ind]) << std::endl;
+    }
+    t = kinematics_forward(leg, targetAngle);
+    t.print();
 
 }
 
 
 
-Mat3 jacobian_larm(const double *q)
+
+
+Matrix3d jacobian_larm(const double *q)
 {
     double d1 = d_su_x;
     double d2 = d_ue_z;
@@ -212,11 +248,12 @@ Mat3 jacobian_larm(const double *q)
     double m31 = 0;
     double m32 = -r3*cb*cr - r2*cb;
     double m33 = r3*sb*sr;
-    Mat3 jac(m11, m12, m13, m21, m22, m23, m31, m32, m33);
+    Matrix3d jac;
+    jac << m11, m12, m13, m21, m22, m23, m31, m32, m33;
     return jac;
 }
 
-Mat3 jacobian_rarm(const double *q)
+Matrix3d jacobian_rarm(const double *q)
 {
     double d1 = d_su_x;
     double d2 = d_ue_z;
@@ -245,7 +282,8 @@ Mat3 jacobian_rarm(const double *q)
     double m31 = 0;
     double m32 = r3*cb*cr + r2*cb;
     double m33 = -r3*sb*sr;
-    Mat3 jac(m11, m12, m13, m21, m22, m23, m31, m32, m33);
+    Matrix3d jac;
+    jac << m11, m12, m13, m21, m22, m23, m31, m32, m33;
     return jac;
 }
 
@@ -256,21 +294,21 @@ double* get_current_angle(int leg)
     return q;
 }
 
-Vec3 get_current_position(int limbID, const double* q)
+Vector3d get_current_position(int limbID, const double* q)
 {
-    Transform t;
+    MTransform t;
     if (limbID == ARM_LEFT)
         t = kinematics_forward_larm(q);
     else if (limbID == ARM_RIGHT)
         t = kinematics_forward_rarm(q);
     double* tl = t.getTranslation();
-    Vec3 tv(tl[0], tl[1], tl[2]);
+    Vector3d tv(tl[0], tl[1], tl[2]);
     return tv;
 }
 
-Mat3 get_current_jacobian(int limbID, const double * q)
+Matrix3d get_current_jacobian(int limbID, const double * q)
 {
-    Mat3 jac;
+    Matrix3d jac;
     if (limbID == ARM_LEFT)
         jac = jacobian_larm(q);
     else if (limbID == ARM_RIGHT)
@@ -278,41 +316,46 @@ Mat3 get_current_jacobian(int limbID, const double * q)
     return jac;
 }
 
-Mat3 compute_pseudo_inverse(Mat3 m)
+MatrixXd get_current_jacobian_leg(int limbID, const double *q)
 {
-    //Mat3 mt = m.transpose();
-    Mat3 m_o = m.transpose()*(m*m.transpose()).inverse();
+  MatrixXd jac(3, 6);
+
+  return jac;
+}
+
+
+Matrix3d compute_pseudo_inverse(Matrix3d m)
+{
+    //Matrix3d mt = m.transpose();
+    Matrix3d m_o = m.transpose()*(m*m.transpose()).inverse();
     return m_o;
 }
 
-double* kinematics_inverse_arm(
-    const int arm,
-    const Vec3 pArm,
-    const double* qArm_now
-)
+double* kinematics_inverse_arm(const int arm, const Vector3d pArm, const double* qArm_now)
 {
     double th_m = 0.001;
     double th_e = 0.0005;
-    Mat3 eye(1, 0, 0, 0, 1, 0, 0, 0, 1);
+    Matrix3d eye;
+    eye << 1, 0, 0, 0, 1, 0, 0, 0, 1;
     double* qArm = new double[3]; // Init the 3 angles with value 0
     for (int ind=0; ind<3; ind++)
         qArm[ind] = qArm_now[ind];
-    Vec3 pArm_now = get_current_position(arm, qArm);
-    Vec3 dArm = pArm - pArm_now;
+    Vector3d pArm_now = get_current_position(arm, qArm);
+    Vector3d dArm = pArm - pArm_now;
 
     int numLoops = 0;
 
-    while ((dArm.Length() > th_m)&&(numLoops<500))
+    while ((dArm.norm() > th_m)&&(numLoops<500))
     {
-        Mat3 jac = get_current_jacobian(arm, qArm);
-        Mat3 jac_inv = compute_pseudo_inverse(jac);
-        Vec3 error_vec = (eye - jac*jac_inv)*dArm;
-        while(error_vec.Length() > th_e)
+        Matrix3d jac = get_current_jacobian(arm, qArm);
+        Matrix3d jac_inv = compute_pseudo_inverse(jac);
+        Vector3d error_vec = (eye - jac*jac_inv)*dArm;
+        while(error_vec.norm() > th_e)
         {
             dArm = dArm/2;
             error_vec = (eye - jac*jac_inv)*dArm;
         }
-        Vec3 temp = jac_inv*dArm;
+        Vector3d temp = jac_inv*dArm;
         for (int ind=0; ind<3; ind++)
         {
             qArm[ind] = qArm[ind] + temp[ind];
@@ -324,6 +367,45 @@ double* kinematics_inverse_arm(
     }
     return qArm;
 }
+
+double* kinematics_inverse_leg(const int leg, const Vector3d pLeg, const double* qLeg_now)
+{
+  double th_m = 0.001;
+  double th_e = 0.0005;
+
+  double* qLeg = new double[numDOF_LEG];
+  for (int ind=0; ind<numDOF_LEG; ind++)
+    qLeg[ind] = qLeg_now[ind];
+  Vector3d pLeg_now = get_current_position(leg, qLeg);
+  Vector3d dLeg = pLeg - pLeg_now;
+  Matrix3d eye;
+  eye << 1, 0, 0, 0, 1, 0, 0, 0, 1;
+
+  int numLoops = 0;
+  while ((dLeg.norm() > th_m)&&(numLoops<500))
+    {
+        MatrixXd jac = get_current_jacobian_leg(leg, qLeg); //Error
+        Matrix3d jac_inv = compute_pseudo_inverse(jac);
+        Vector3d error_vec = (eye - jac*jac_inv)*dLeg; //Error
+        while(error_vec.norm() > th_e)
+        {
+            dLeg = dLeg/2;
+            error_vec = (eye - jac*jac_inv)*dLeg;
+        }
+        Vector3d temp = jac_inv*dLeg; //Error
+        for (int ind=0; ind<numDOF_LEG; ind++)
+        {
+            qLeg[ind] = qLeg[ind] + temp[ind];
+            qLeg[ind] = clamp_limits(qLeg[ind]);
+        }
+        pLeg_now = get_current_position(leg, qLeg);
+        dLeg = pLeg - pLeg_now;
+        numLoops ++;
+    }
+    return qLeg;
+
+}
+
 
 double servo_to_radian(int servo)
 {
@@ -345,47 +427,3 @@ double clamp_limits(double q)
     return q;
 }
 
-
-
-std::vector<double>
-kinematics_inverse_leg(
-    Transform trLeg,
-    int leg, double unused)
-{
-    std::vector<double> qLeg(6);
-    return qLeg;
-}
-
-std::vector<double>
-kinematics_inverse_lleg(Transform trLeg, double unused)
-{
-    return kinematics_inverse_leg(trLeg, LEG_LEFT, unused);
-}
-
-std::vector<double>
-kinematics_inverse_rleg(Transform trLeg, double unused)
-{
-    return kinematics_inverse_leg(trLeg, LEG_RIGHT, unused);
-}
-
-std::vector<double>
-kinematics_inverse_legs(
-    const double *pLLeg,
-    const double *pRLeg,
-    const double *pTorso,
-    int legSupport)
-{
-    std::vector<double> qLLeg(12), qRLeg;
-    Transform trLLeg = transform6D(pLLeg);
-    Transform trRLeg = transform6D(pRLeg);
-    Transform trTorso = transform6D(pTorso);
-
-    Transform trTorso_LLeg = inv(trTorso)*trLLeg;
-    Transform trTorso_RLeg = inv(trTorso)*trRLeg;
-
-    qLLeg = kinematics_inverse_lleg(trTorso_LLeg, 0);
-    qRLeg = kinematics_inverse_rleg(trTorso_RLeg, 0);
-
-    qLLeg.insert(qLLeg.end(), qRLeg.begin(), qRLeg.end());
-    return qLLeg;
-}

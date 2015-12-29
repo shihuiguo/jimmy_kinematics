@@ -1,11 +1,11 @@
-#include "Transform.h"
+#include "MTransform.h"
 #include <math.h>
 
-Transform::Transform() {
+MTransform::MTransform() {
   clear();
 }
 
-double* Transform::getTranslation(){
+double* MTransform::getTranslation(){
   double* tr = new double[3];
   tr[0] = t[0][3];
   tr[1] = t[1][3];
@@ -13,7 +13,7 @@ double* Transform::getTranslation(){
   return tr;
 }
 
-void Transform::clear() {
+void MTransform::clear() {
   // Initialize to identity matrix:
   for (int i = 0; i < 4; i++)
     for (int j = 0; j < 4; j++)
@@ -25,42 +25,42 @@ void Transform::clear() {
   t[3][3] = 1;
 }
 
-Transform& Transform::translate(double x, double y, double z) {
+MTransform& MTransform::translate(double x, double y, double z) {
   t[0][3] += t[0][0]*x + t[0][1]*y + t[0][2]*z;
   t[1][3] += t[1][0]*x + t[1][1]*y + t[1][2]*z;
   t[2][3] += t[2][0]*x + t[2][1]*y + t[2][2]*z;
   return *this;
 }
 
-Transform& Transform::translateOrigin(double x, double y, double z){
+MTransform& MTransform::translateOrigin(double x, double y, double z){
   t[0][3] += x;
   t[1][3] += y;
   t[2][3] += z;
   return *this;
 }
 
-Transform& Transform::translateX(double x) {
+MTransform& MTransform::translateX(double x) {
   t[0][3] += t[0][0]*x;
   t[1][3] += t[1][0]*x;
   t[2][3] += t[2][0]*x;
   return *this;
 }
 
-Transform& Transform::translateY(double y) {
+MTransform& MTransform::translateY(double y) {
   t[0][3] += t[0][1]*y;
   t[1][3] += t[1][1]*y;
   t[2][3] += t[2][1]*y;
   return *this;
 }
 
-Transform& Transform::translateZ(double z) {
+MTransform& MTransform::translateZ(double z) {
   t[0][3] += t[0][2]*z;
   t[1][3] += t[1][2]*z;
   t[2][3] += t[2][2]*z;
   return *this;
 }
 
-Transform& Transform::rotateX(double a) {
+MTransform& MTransform::rotateX(double a) {
   double ca = cos(a);
   double sa = sin(a);
   for (int i = 0; i < 3; i++) {
@@ -72,7 +72,7 @@ Transform& Transform::rotateX(double a) {
   return *this;
 }
 
-Transform& Transform::rotateY(double a) {
+MTransform& MTransform::rotateY(double a) {
   double ca = cos(a);
   double sa = sin(a);
   for (int i = 0; i < 3; i++) {
@@ -84,7 +84,7 @@ Transform& Transform::rotateY(double a) {
   return *this;
 }
 
-Transform& Transform::rotateZ(double a) {
+MTransform& MTransform::rotateZ(double a) {
   double ca = cos(a);
   double sa = sin(a);
   for (int i = 0; i < 3; i++) {
@@ -96,9 +96,9 @@ Transform& Transform::rotateZ(double a) {
   return *this;
 }
 
-Transform& Transform::mDH(double alpha, double a, double theta, double d) {
+MTransform& MTransform::mDH(double alpha, double a, double theta, double d) {
   /*
-  Transform t1;
+  MTransform t1;
   double ca = cos(alpha);
   double sa = sin(alpha);
   double ct = cos(theta);
@@ -112,7 +112,7 @@ Transform& Transform::mDH(double alpha, double a, double theta, double d) {
   return *this;
 }
 
-void Transform::apply(double x[3]) {
+void MTransform::apply(double x[3]) {
   double x0[3];
   for (int i = 0; i < 3; i++) {
     x0[i] = x[i];
@@ -125,7 +125,7 @@ void Transform::apply(double x[3]) {
   }
 }
 
-void Transform::print(){
+void MTransform::print(){
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
       printf("%.4g ",t[i][j]);
@@ -136,16 +136,16 @@ void Transform::print(){
 }
 
 
-double const Transform::operator() (int i, int j) const {
+double const MTransform::operator() (int i, int j) const {
   return t[i][j];
 }
 
-double& Transform::operator() (int i, int j) {
+double& MTransform::operator() (int i, int j) {
   return t[i][j];
 }
 
-Transform operator* (const Transform &t1, const Transform &t2) {
-  Transform t;
+MTransform operator* (const MTransform &t1, const MTransform &t2) {
+  MTransform t;
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 4; j++) {
       t(i,j) = t1(i,0)*t2(0,j) + t1(i,1)*t2(1,j) +
@@ -155,8 +155,8 @@ Transform operator* (const Transform &t1, const Transform &t2) {
   return t;
 }
 
-Transform inv (const Transform &t1) {
-  Transform t;
+MTransform inv (const MTransform &t1) {
+  MTransform t;
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
       // Transpose rotation:
@@ -168,8 +168,8 @@ Transform inv (const Transform &t1) {
   return t;
 }
 
-Transform transform6D(const double p[6]) {
-  Transform t;
+MTransform MTransform6D(const double p[6]) {
+  MTransform t;
   //  t = t.translate(p[0],p[1],p[2]).rotateZ(p[5]).rotateY(p[4]).rotateX(p[3]);
 
   double cwx = cos(p[3]);
@@ -193,7 +193,7 @@ Transform transform6D(const double p[6]) {
   return t;
 }
 
-std::vector<double> position6D(const Transform &t1) {
+std::vector<double> position6D(const MTransform &t1) {
   std::vector<double> p(6);
   p[0] = t1(0,3);
   p[1] = t1(1,3);

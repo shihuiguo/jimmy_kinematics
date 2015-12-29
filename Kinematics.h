@@ -3,8 +3,10 @@
 
 #include <math.h>
 #include <vector>
-#include "Transform.h"
-#include "Mat3.h"
+#include "MTransform.h"
+#include <Eigen/Dense>
+
+using namespace Eigen;
 
 /* Constants */
 enum {ARM_LEFT = 0, ARM_RIGHT = 1, LEG_LEFT = 2, LEG_RIGHT = 3};
@@ -35,17 +37,18 @@ const double delta_upperleg = 0.1775;
 const double delta_knee = 0.1888;
 /* Constants */
 /* Forward Kinematics */
-Transform kinematics_forward(const int arm, const double *q);
-Transform kinematics_forward_head(const double *q);
-Transform kinematics_forward_larm(const double *q);
-Transform kinematics_forward_rarm(const double *q);
-Transform kinematics_forward_lleg(const double *q);
-Transform kinematics_forward_rleg(const double *q);
+MTransform kinematics_forward(const int arm, const double *q);
+MTransform kinematics_forward_head(const double *q);
+MTransform kinematics_forward_larm(const double *q);
+MTransform kinematics_forward_rarm(const double *q);
+MTransform kinematics_forward_lleg(const double *q);
+MTransform kinematics_forward_rleg(const double *q);
 void kinematics_forward_larm_exp(const double *q);
 void kinematics_forward_rarm_exp(const double *q);
 /* Forward Kinematics */
 /* Inverse Kinematics */
-double* kinematics_inverse_arm(const int arm, const Vec3 dArm, const double* qArm_now);
+double* kinematics_inverse_arm(const int arm, const Vector3d pArm, const double* qArm_now);
+double* kinematics_inverse_leg(const int leg, const Vector3d pLeg, const double* qLeg_now);
 /* Forward Kinematics */
 /* Utility Function For Testing*/
 void test_kinematics_forward_arm(int arm);
@@ -55,35 +58,14 @@ void test_kinematics_inverse_leg(int leg);
 /* Utility Function */
 /* Utility Function */
 
-Vec3 get_current_position(int limbID, const double * q);
-Mat3 get_current_jacobian(int limbID, const double * q);
+Vector3d get_current_position(int limbID, const double * q);
+Matrix3d get_current_jacobian(int limbID, const double * q);
+// MatrixXd get_current_jacobian_leg(int limbID, const double * q);
 
 double servo_to_radian(int servo);
 int radian_to_servo(double radian);
 double clamp_limits(double q);
 
 /* Utility Function */
-/* Functions from original program of Darwin-op. */
-
-std::vector<double>
-kinematics_inverse_leg(
-			   const Transform trLeg,
-			   const int leg,
-			   double unused=0);
-
-std::vector<double>
-kinematics_inverse_lleg(const Transform trLeg, double unused=0);
-
-std::vector<double>
-kinematics_inverse_rleg(const Transform trLeg, double unused=0);
-
-std::vector<double>
-kinematics_inverse_legs(
-			    const double *pLLeg,
-			    const double *pRLeg,
-			    const double *pTorso,
-			    int legSupport=0);
-
-/* Functions from original program of Darwin-op. */
 
 #endif
