@@ -359,8 +359,8 @@
 		<Unit filename="Eigen/src/plugins/MatrixCwiseUnaryOps.h" />
 		<Unit filename="Kinematics.cpp" />
 		<Unit filename="Kinematics.h" />
-		<Unit filename="Transform.cpp" />
-		<Unit filename="Transform.h" />
+		<Unit filename="MTransform.cpp" />
+		<Unit filename="MTransform.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />

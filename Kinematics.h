@@ -45,6 +45,8 @@ MTransform kinematics_forward_lleg(const double *q);
 MTransform kinematics_forward_rleg(const double *q);
 void kinematics_forward_larm_exp(const double *q);
 void kinematics_forward_rarm_exp(const double *q);
+void kinematics_forward_lleg_exp(const double *q);
+void kinematics_forward_rleg_exp(const double *q);
 /* Forward Kinematics */
 /* Inverse Kinematics */
 double* kinematics_inverse_arm(const int arm, const Vector3d pArm, const double* qArm_now);
