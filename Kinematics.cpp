@@ -115,20 +115,38 @@ Transform kinematics_forward_lleg(const double *q)
     .mDH(-PI, d_uk, -delta_upperleg+q[2], 0)
     .mDH(0, d_ka, -delta_upperleg-delta_knee+q[3], 0)
     .mDH(-PI/2, 0, delta_knee+q[4], 0)
-    .mDH(0, 0, q[5], 0);
+    .mDH(0, d_ag, q[5], 0);
     return t;
 }
 
 Transform kinematics_forward_rleg(const double *q)
 {
     Transform t;
+    t.mDH(PI/2, 0, PI/2+q[0], d_hu)
+    .mDH(-PI/2, 0, PI/2+q[1], 0)
+    .mDH(PI, d_uk, delta_upperleg+q[2], 0)
+    .mDH(0, d_ka, delta_upperleg+delta_knee+q[3], 0)
+    .mDH(PI/2, 0, -delta_knee+q[4], 0)
+    .mDH(0, d_ag, q[6], 0);
     return t;
 }
 
 void test_kinematics_forward_arm(int arm)
 {
-
+    std::cout << "Input three DOFs (0~1023) for current pose!" << std::endl;
+    int *q = new int[numDOF_ARM];
+    double *angle = new double[numDOF_ARM];
+    for (int ind=0; ind<numDOF_ARM; ind++)
+    {
+        std::cin >> q[ind];
+        angle[ind] = servo_to_radian(q[ind]);
+    }
+    Transform t = kinematics_forward(arm, angle);
+    t.print();
 }
+
+
+
 
 void test_kinematics_inverse_arm(int arm)
 {
@@ -325,6 +343,124 @@ double* kinematics_inverse_arm(
     return qArm;
 }
 
+double* kinematics_inverse_leg(int leg, double* inpos, double* inrot)
+{
+
+    double* angles = new double[numDOF_LEG];
+
+
+    bool result = compute_inverse_leg(angles, inpos, inrot);
+    if (result)
+    {
+      for (int ind=0; ind<numDOF_LEG; ind++)
+      {
+        if (leg==LEG_LEFT)
+          angles[ind] = (double)dir_l[ind] * angles[ind];
+        else if (leg==LEG_RIGHT)
+          angles[ind] = (double)dir_r[ind] * angles[ind];
+        //offset[ind] = (double)dir[ind] * angles[ind] * RATIO_ANGLE2VALUE;
+        //if (ind == 1) // R_HIP_ROLL
+        //    offset += (double)dir[ind] * pelvis_offset;
+        //else if (ind == 2) // R_HIP_PITCH or L_HIP_PITCH
+        //    offset -= (double)dir[ind] * HIP_PITCH_OFFSET * RATIO_ANGLE2VALUE;
+      }
+    }
+    return angles;
+}
+
+bool compute_inverse_leg(double* out, double* inpos, double* inrot)
+{
+    double x = inpos[0];
+    double y = inpos[1];
+    double z = inpos[2];
+    double a = inrot[0];
+    double b = inrot[1];
+    double c = inrot[2];
+
+    Transform Tad, Tda, Tcd, Tdc, Tac;
+    Vec3 vec;
+    double _Rac, _Acos, _Atan, _k, _l, _m, _n, _s, _c, _theta;
+    double THIGH_LENGTH = d_uk;
+    double CALF_LENGTH = d_ka;
+    double ANKLE_LENGTH = d_ag;
+    double LEG_LENGTH = THIGH_LENGTH+CALF_LENGTH+ANKLE_LENGTH;
+
+    //Tad.SetTransform(Vec3(x, y, z - LEG_LENGTH), Vec3(a * 180.0 / PI, b * 180.0 / PI, c * 180.0 / PI));
+    double tr_ad[6] = {x, y, z - LEG_LENGTH, a * 180.0 / PI, b * 180.0 / PI, c * 180.0 / PI};
+    Tad = transform6D(tr_ad);
+
+    vec.x = x + Tad(0, 2) * ANKLE_LENGTH;
+    vec.y = y + Tad(1, 2) * ANKLE_LENGTH;
+    vec.z = (z - LEG_LENGTH) + Tad(2, 2) * ANKLE_LENGTH;
+
+    // Get Knee
+    _Rac = vec.Length();
+    _Acos = acos((_Rac * _Rac - THIGH_LENGTH * THIGH_LENGTH - CALF_LENGTH * CALF_LENGTH) / (2 * THIGH_LENGTH * CALF_LENGTH));
+    if (isnan(_Acos) == 1)
+        return false;
+    *(out + 3) = _Acos;
+
+    // Get Ankle Roll
+    Tda = Tad;
+    // removing this check could possibly lead to error
+    //if (Tda.det() == 0)
+    //    return false;
+    _k = sqrt(Tda(1, 3) * Tda(1, 3) + Tda(2, 3) * Tda(2, 3));
+    _l = sqrt(Tda(1, 3) * Tda(1, 3) + (Tda(2, 3) - ANKLE_LENGTH) * (Tda(2, 3) - ANKLE_LENGTH));
+    _m = (_k * _k - _l * _l - ANKLE_LENGTH * ANKLE_LENGTH) / (2 * _l * ANKLE_LENGTH);
+    if (_m > 1.0)
+        _m = 1.0;
+    else if (_m < -1.0)
+        _m = -1.0;
+    _Acos = acos(_m);
+    if (isnan(_Acos) == 1)
+        return false;
+    if (Tda(1, 3) < 0.0)
+        *(out + 5) = -_Acos;
+    else
+        *(out + 5) = _Acos;
+
+    // Get Hip Yaw
+    //Tcd.SetTransform(Point3D(0, 0, -ANKLE_LENGTH), Vector3D(*(out + 5) * 180.0 / PI, 0, 0));
+    double tr_cd[6] = {0, 0, -ANKLE_LENGTH, *(out + 5) * 180.0 / PI, 0, 0};
+    Tcd = transform6D(tr_cd);
+    Tdc = Tcd;
+
+    // removing this check could possibly lead to error
+    //if (Tdc.det() == 0)
+    //    return false;
+    Tac = Tad * Tdc;
+    _Atan = atan2(-Tac(0, 1) , Tac(1, 1));
+    if (isinf(_Atan) == 1)
+        return false;
+    *(out) = _Atan;
+
+    // Get Hip Roll
+    _Atan = atan2(Tac(2, 1), -Tac(0, 1) * sin(*(out)) + Tac(1, 1) * cos(*(out)));
+    if (isinf(_Atan) == 1)
+        return false;
+    *(out + 1) = _Atan;
+
+    // Get Hip Pitch and Ankle Pitch
+    _Atan = atan2(Tac(0, 2) * cos(*(out)) + Tac(1, 2) * sin(*(out)), Tac(0, 0) * cos(*(out)) + Tac(1, 0) * sin(*(out)));
+    if (isinf(_Atan) == 1)
+        return false;
+    _theta = _Atan;
+    _k = sin(*(out + 3)) * CALF_LENGTH;
+    _l = -THIGH_LENGTH - cos(*(out + 3)) * CALF_LENGTH;
+    _m = cos(*(out)) * vec.x + sin(*(out)) * vec.y;
+    _n = cos(*(out + 1)) * vec.z + sin(*(out)) * sin(*(out + 1)) * vec.x - cos(*(out)) * sin(*(out + 1)) * vec.y;
+    _s = (_k * _n + _l * _m) / (_k * _k + _l * _l);
+    _c = (_n - _k * _s) / _l;
+    _Atan = atan2(_s, _c);
+    if (isinf(_Atan) == 1)
+        return false;
+    *(out + 2) = _Atan;
+    *(out + 4) = _theta - *(out + 3) - *(out + 2);
+
+    return true;
+}
+
 double servo_to_radian(int servo)
 {
     return (servo-512)/1023.0*300.0/180*PI;
@@ -345,47 +481,3 @@ double clamp_limits(double q)
     return q;
 }
 
-
-
-std::vector<double>
-kinematics_inverse_leg(
-    Transform trLeg,
-    int leg, double unused)
-{
-    std::vector<double> qLeg(6);
-    return qLeg;
-}
-
-std::vector<double>
-kinematics_inverse_lleg(Transform trLeg, double unused)
-{
-    return kinematics_inverse_leg(trLeg, LEG_LEFT, unused);
-}
-
-std::vector<double>
-kinematics_inverse_rleg(Transform trLeg, double unused)
-{
-    return kinematics_inverse_leg(trLeg, LEG_RIGHT, unused);
-}
-
-std::vector<double>
-kinematics_inverse_legs(
-    const double *pLLeg,
-    const double *pRLeg,
-    const double *pTorso,
-    int legSupport)
-{
-    std::vector<double> qLLeg(12), qRLeg;
-    Transform trLLeg = transform6D(pLLeg);
-    Transform trRLeg = transform6D(pRLeg);
-    Transform trTorso = transform6D(pTorso);
-
-    Transform trTorso_LLeg = inv(trTorso)*trLLeg;
-    Transform trTorso_RLeg = inv(trTorso)*trRLeg;
-
-    qLLeg = kinematics_inverse_lleg(trTorso_LLeg, 0);
-    qRLeg = kinematics_inverse_rleg(trTorso_RLeg, 0);
-
-    qLLeg.insert(qLLeg.end(), qRLeg.begin(), qRLeg.end());
-    return qLLeg;
-}

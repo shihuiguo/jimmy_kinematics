@@ -19,6 +19,7 @@ public:
   Transform &rotateY(double a = 0);
   Transform &rotateZ(double a = 0);
   Transform &mDH(double alpha, double a, double theta, double d);
+  //Transform &SetTransform(Vec3 pos, Vec3 rot);
   void apply(double x[3]);
   void print();
   double& operator() (int i, int j);

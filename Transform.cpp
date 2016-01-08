@@ -143,6 +143,30 @@ double const Transform::operator() (int i, int j) const {
 double& Transform::operator() (int i, int j) {
   return t[i][j];
 }
+/*
+Transform & Transform::SetTransform(Vec3 pos, Vec3 rot)
+{
+  double cwx = cos(rot.x);
+  double swx = sin(rot.x);
+  double cwy = cos(rot.y);
+  double swy = sin(rot.y);
+  double cwz = cos(rot.z);
+  double swz = sin(rot.z);
+  t[0][0] = cwy*cwz;
+  t[0][1] = swx*swy*cwz-cwx*swz;
+  t[0][2] = cwx*swy*cwz+swx*swz;
+  t[0][3] = pos.x;
+  t[1][0] = cwy*swz;
+  t[1][1] = swx*swy*swz+cwx*cwz;
+  t[1][2] = cwx*swy*swz-swx*cwz;
+  t[1][3] = pos.y;
+  t[2][0] = -swy;
+  t[2][1] = swx*cwy;
+  t[2][2] = cwx*cwy;
+  t[2][3] = pos.z;
+  return *this;
+}
+*/
 
 Transform operator* (const Transform &t1, const Transform &t2) {
   Transform t;

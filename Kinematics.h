@@ -31,11 +31,19 @@ const double d_eh_z = 0.0;
 const double d_hu = 0.027; // hip to uppler leg
 const double d_uk = 0.078; // upper leg to knee
 const double d_ka = 0.073; // knee to ankle
+const double d_ag = 0.032; // ankle to the ground surface
 const double delta_upperleg = 0.1775;
 const double delta_knee = 0.1888;
-/* Constants */
+
+// These constants are from HROS1 framework
+// L_HIP_YAW, L_HIP_ROLL, L_HIP_PITCH, L_KNEE, L_ANKLE_PITCH, L_ANKLE_ROLL
+const int dir_l[6] = {-1, 1, -1, 1, 1, -1};
+// R_HIP_YAW, R_HIP_ROLL, R_HIP_PITCH, R_KNEE, R_ANKLE_PITCH, R_ANKLE_ROLL
+const int dir_r[6] = {-1, 1, 1, -1, -1, -1};
+
+//*************************//
 /* Forward Kinematics */
-Transform kinematics_forward(const int arm, const double *q);
+Transform kinematics_forward(const int limb, const double *q);
 Transform kinematics_forward_head(const double *q);
 Transform kinematics_forward_larm(const double *q);
 Transform kinematics_forward_rarm(const double *q);
@@ -43,16 +51,18 @@ Transform kinematics_forward_lleg(const double *q);
 Transform kinematics_forward_rleg(const double *q);
 void kinematics_forward_larm_exp(const double *q);
 void kinematics_forward_rarm_exp(const double *q);
-/* Forward Kinematics */
+//*************************//
 /* Inverse Kinematics */
 double* kinematics_inverse_arm(const int arm, const Vec3 dArm, const double* qArm_now);
-/* Forward Kinematics */
+double* kinematics_inverse_leg(const int leg, const double* inpos, const double* inrot);
+bool compute_inverse_leg(double* out, double* inpos, double* inrot);
+//*************************//
 /* Utility Function For Testing*/
 void test_kinematics_forward_arm(int arm);
 void test_kinematics_inverse_arm(int arm);
 void test_kinematics_forward_leg(int leg);
 void test_kinematics_inverse_leg(int leg);
-/* Utility Function */
+//*************************//
 /* Utility Function */
 
 Vec3 get_current_position(int limbID, const double * q);
@@ -62,28 +72,6 @@ double servo_to_radian(int servo);
 int radian_to_servo(double radian);
 double clamp_limits(double q);
 
-/* Utility Function */
-/* Functions from original program of Darwin-op. */
-
-std::vector<double>
-kinematics_inverse_leg(
-			   const Transform trLeg,
-			   const int leg,
-			   double unused=0);
-
-std::vector<double>
-kinematics_inverse_lleg(const Transform trLeg, double unused=0);
-
-std::vector<double>
-kinematics_inverse_rleg(const Transform trLeg, double unused=0);
-
-std::vector<double>
-kinematics_inverse_legs(
-			    const double *pLLeg,
-			    const double *pRLeg,
-			    const double *pTorso,
-			    int legSupport=0);
-
-/* Functions from original program of Darwin-op. */
+//*************************//
 
 #endif
